@@ -3,6 +3,7 @@ function gpml_compile( cpp_comp, fortran_comp, lbfgsb_ver )
 % gpml_compile( cpp_comp=g++, fortran_comp=gfortran, lbfgsb_ver=3.0 )
 %
 % Compile GPML sources (C/Fortran) prior to running the optimisation.
+% This requires the Deck library to be on the path (https://github.com/jhadida/deck).
 %
 % JH
 
@@ -22,9 +23,10 @@ function gpml_compile( cpp_comp, fortran_comp, lbfgsb_ver )
     % Build Makefile
     current = pwd;
     here = fileparts(mfilename('fullpath'));
-    util = fullfile( here, 'gpml/util' );
-    tpl = dk.str.Template( fullfile(util,'lbfgsb/Makefile.tpl'), true );
-    dk.fs.puts( fullfile(util,'lbfgsb/Makefile'), tpl.substitute(sub), true );
+    util = fullfile( here, 'gpml', 'util' );
+    tpl = dk.str.Template( fullfile(here,'Makefile.tpl'), true );
+    back = fullfile(util,'lbfgsb','Makefile.old');
+    dest = fullfile(util,'lbfgsb','Makefile');
     
     % Compile solve_chol
     dk.disp('Compiling solve_chol...');
@@ -34,7 +36,23 @@ function gpml_compile( cpp_comp, fortran_comp, lbfgsb_ver )
     % Compile lbfgsb
     dk.disp('Compiling lbfgsb...');
     cd lbfgsb
+    
+    movefile(dest,back);
+    dk.fs.puts( dest, tpl.substitute(sub), true );
     system('make');
+    delete(dest);
+    movefile(back,dest);
+    
+    % Compile minfunc
+    dk.disp('Compiling minfunc...');
+    cd ../minfunc
+    if ~dk.fs.isdir('compiled')
+        [s,m,k] = mkdir('compiled');
+        assert( s == 1, 'Could not create folder: compiled' );
+    end
+    tomex = { 'lbfgsAddC.c', 'lbfgsC.c', 'lbfgsProdC.c', 'mcholC.c' };
+    cellfun( @(f) mex('-O', '-outdir', 'compiled', fullfile('mex',f)), tomex );
+    
     cd(current);
     
 end
