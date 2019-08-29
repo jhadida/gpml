@@ -29,12 +29,12 @@ function gpml_compile( cpp_comp, fortran_comp, lbfgsb_ver )
     dest = fullfile(util,'lbfgsb','Makefile');
     
     % Compile solve_chol
-    dk.disp('Compiling solve_chol...');
+    dk.print('Compiling solve_chol...');
     cd(util);
     mex -O -lmwlapack solve_chol.c
     
     % Compile lbfgsb
-    dk.disp('Compiling lbfgsb...');
+    dk.print('Compiling lbfgsb...');
     cd lbfgsb
     
     movefile(dest,back);
@@ -44,7 +44,7 @@ function gpml_compile( cpp_comp, fortran_comp, lbfgsb_ver )
     movefile(back,dest);
     
     % Compile minfunc
-    dk.disp('Compiling minfunc...');
+    dk.print('Compiling minfunc...');
     cd ../minfunc
     if ~dk.fs.isdir('compiled')
         [s,m,k] = mkdir('compiled');
